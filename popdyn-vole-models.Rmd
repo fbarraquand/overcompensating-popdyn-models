@@ -1,0 +1,151 @@
+---
+title: "Overcompensating models for common voles"
+subtitle: "How to model discrete-time stochastic population dynamics for cyclic or outbreaking populations"
+author: "Frédéric Barraquand (CNRS, IMB)"
+date: "2021-05-18"
+output: 
+  beamer_presentation:
+    theme: "Boadilla"
+urlcolor: blue
+
+---
+
+```{r setup, include=FALSE}
+options(width = 300)
+knitr::opts_chunk$set(cache = FALSE) ### wonder if that's not changing the size of the html https://bioinfo-fr.net/maitrisez-cache-de-rmarkdown
+library(rstan)
+rstan_options(auto_write = FALSE)
+options(mc.cores = parallel::detectCores())
+library(MASS)
+library(bayesplot)
+library(knitr)
+
+```
+
+
+## An empirical example from Western France: common voles
+
+![_Microtus arvalis_, Photo Adrien Pinot](fig/campa.jpg){ width=40% }
+
+These tend to have regular outbreaks aka population cycles, as mentioned early on by Charles Elton in 1942 in *Voles, Mice and Lemmings*:
+
+> Generally speaking each vole plague has been considered as an isolated event, with its own cycle of destruction, public excitation, desperate measures, final relief (from one cause or another), and dismissal from thought. 
+> Such a staccato consciousness of the phenomenon is not justified
+
+## Time series monitoring of vole population cycles
+
+From [Barraquand, F., Pinot, A., Yoccoz, N. G., & Bretagnolle, V. (2014). Overcompensation and phase effects in a cyclic common vole population: between first and second-order cycles. Journal of Animal Ecology, 83(6), 1367-1378](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.12257)
+
+![Chizé's biological research centre long-term monitoring](fig/Fig1_Pinot_barraquand_et_al_V2.pdf){ width=95% }
+
+## Now back to continuous-time theory
+
+What does create population cycles? Delayed negative feedback
+
+$$ \frac{dN}{dt} = r N(t) \left(1-N(t-\tau)/K\right) $$
+
+as opposed to logistic with immediate negative feedback
+
+$$ \frac{dN}{dt} = r N(t) \left(1-\frac{N(t)}{K}\right) $$
+
+## The logistic equation in discrete and continous time
+
+One can show that 
+
+$$ \frac{dN}{dt} = r N(t) \left(1-\frac{N(t)}{K}\right) $$
+
+is *exactly* equivalent to 
+
+$$ N(t+1) = N(t) \frac{e^r N(t)}{1+\frac{\left(e^r-1\right)}{K}N(t)} $$
+
+which is the Beverton-Holt model. Tips:
+
+- use [separation of variables](https://en.wikipedia.org/wiki/Separation_of_variables)
+- and the formula $\frac{1}{X(1-X)} = \frac{1}{1-X} +\frac{1}{X}$
+
+## Discrete-time models that are **not** equivalent to the logistic model
+
+- Ricker $$N(t+1) = N(t) \exp \left(r\left(1-\frac{N(t)}{K}\right)\right)$$
+- Hassell $$N(t+1) = \frac{e^r N(t)}{(1+ \alpha N(t))^\beta}$$ (unless $\beta = 1$)
+- Logistic map $$N(t+1) = N(t) R \left(1-\frac{N(t)}{K}\right)$$ (horrible model, don't do this)
+
+## Overcompensation aka carrying capacity overshoots {.allowframebreaks}
+
+```{r simulating-ricker}
+r = 4
+K = 10
+N = rep(1,100)
+N[1] = 1
+for (t in 1:100){
+  N[t+1] = N[t]*exp(r*(1-N[t]/K))
+}
+plot(N[1:99],N[2:100],xlab = "N(t)",
+     ylab = "N(t+1)",pch = 19)
+abline(v=10,col="red",lwd=2)
+```
+
+```{r simulating-ricker-ts}
+plot(1:100, N[1:100],xlab = "Time",
+     ylab = "N(t+1)", type = "both", pch = 19)
+abline(h=10,col="red",lwd=2)
+```
+
+## Undercompensation under the Beverton-Holt model {.allowframebreaks}
+
+```{r simulating-bevholt}
+r = 4
+K = 10
+N = rep(1,100)
+N[1] = 1
+for (t in 1:100){
+  N[t+1] = N[t]*exp(r) / (1+(exp(r)-1)*N[t]/K)
+}
+plot(N[1:99],N[2:100],xlab = "N(t)",
+     ylab = "N(t+1)",pch = 19)
+abline(v=10,col="red",lwd=2)
+```
+
+
+```{r simulating-bevholt-ts}
+plot(1:100, N[1:100],xlab = "Time",
+     ylab = "N(t+1)", type = "both", pch = 19)
+abline(h=10,col="red",lwd=2)
+```
+
+
+## Discrete-time overcompensating models 
+
+= models with short time delays. Fitness computed between $t and t+1$ depends on $N(t)$. Thus models with a single time lag can already behave very differently from continuous time models without delays. 
+
+This is why we can observe chaos in such discrete-time models (May quote). 
+
+## Back to our vole example
+
+We do have over overcompensation obvious from the plots 
+
+[plot]
+
+Thus if we want to fit models they have to account for this. 
+
+## Nonlinear models fitted
+
+In the paper we fitted several models, notably those by Maynard Smith and Slatkin as well as Hassell
+
+[plot]
+
+I recommend the Maynard-Smith and Slatkin model, also used in [Soay Sheep](ref) but we'll focus on Hassell for simplicity. 
+Now removing (1) multiple sites, (2) additional delays or phase-dependence. 
+
+## Simulating and fitting the Hassell model in Stan
+
+We'll use the estimated parameter values from our paper. 
+
+## The deal with delayed density-dependence
+
+## The Gompertz, AR(1) model
+
+
+
+
+
+
