@@ -1,0 +1,139 @@
+
+
+---
+title: "Spatial models"
+author: "Frédéric Barraquand (CNRS, IMB)"
+date: '2021-05-18'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_document:
+    highlight: textmate
+    theme: paper
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+
+```{r setup, include = FALSE }
+options(width = 300)
+knitr::opts_chunk$set(cache = FALSE) 
+library(rstan)
+rstan_options(auto_write = FALSE)
+options(mc.cores = parallel::detectCores())
+library(tidyr)
+library(knitr)
+library(bayesplot)
+```
+
+  
+Loading data and creating a suitable data for Stan code
+
+```{r load-select-data}
+fulldata = read.table(file = "vole_data/PGR_Abondance_both_OK.txt",header=TRUE,sep="")
+fulldata$NtSu
+head(fulldata)
+vole_table = fulldata %>% dplyr::select(Sect,Date,NtSu,Spr_NDVI,Win_NDVI) %>% tidyr::pivot_wider(names_from = Sect, values_from = NtSu)
+vole_densities = vole_table  %>% dplyr::select(!c(Date,Spr_NDVI,Win_NDVI,U)) # we remove U as there too few data
+vole_densities = as.matrix(vole_densities[1:15,])
+data = list(N=vole_densities,tmax=15,I=8)
+datal = list(x=log(vole_densities+0.01),tmax=15,I=8)
+```
+
+Now creating the spatial model
+
+```{stan output.var="spatial.hassell"}
+data {                // observed variables
+  int<lower=1> tmax;  // number of observations
+  int<lower=1> I;  // number of sectors
+  matrix[tmax,I] x;     // state variable
+}
+parameters {            // unobserved parameters
+  real r;               // growth rate
+  real<lower=0> alpha;  // density-dependence
+  real<lower=0> beta;   // density-dependence exponent
+  real<lower=0> sigma;  // sd noise growth rate
+}
+model {
+  //priors
+  r ~ normal(0,1);
+  alpha ~ exponential(10);
+  beta ~ exponential(10);
+  sigma ~ exponential(10);
+  
+  //likelihood
+  for (i in 1:I){
+      for (t in 1:(tmax-1)){
+         x[t+1,i] ~ normal(r+x[t,i]-beta*log(1+alpha*exp(x[t,i])),sigma);
+      }
+  }
+  
+}
+```
+
+```{r stan-code, eval=F, include=F}
+sink("model.hassell.stan") ### for me, useful to debug
+cat("
+data {                // observed variables
+  int<lower=1> tmax;  // number of observations
+  int<lower=1> I;  // number of sectors
+  matrix[tmax,I] x;     // state variable
+}
+parameters {            // unobserved parameters
+  real r;               // growth rate
+  real<lower=0> alpha;  // density-dependence
+  real<lower=0> beta;   // density-dependence exponent
+  real<lower=0> sigma;  // sd noise growth rate
+}
+model {
+  //priors
+  r ~ normal(0,1);
+  alpha ~ exponential(10);
+  beta ~ exponential(10);
+  sigma ~ exponential(10);
+  
+  //likelihood
+  for (i in 1:I){
+      for (t in 1:(tmax-1)){
+         x[t+1,i] ~ normal(r+x[t,i]-beta*log(1+alpha*exp(x[t,i])),sigma);
+      }
+  }
+  
+}
+"
+,fill=TRUE)
+sink()
+```
+
+```{r print_model, cache=T, echo = F}
+#modelH <- stan_model(file = "spatial.hassell.stan")
+#fit.hassell <- sampling(modelH, data = datal, 
+#                        iter = 1000, chains = 2, cores = 2)
+fit.hassell <- sampling(spatial.hassell, data = datal, 
+             iter = 1000, chains = 2, cores = 2)
+print(fit.hassell, probs = c(0.10, 0.5, 0.9))
+
+```
+
+Stan does not handle missing data easily--I had forgotten. So much easier with JAGS it seems here. Let's use zeroes for now and a trick. 
+```{r replacing-NAs}
+vdens = vole_densities
+vdens[is.na(vdens)] = 0
+lognormnoise = rlnorm(15*8,-4,0.001)
+lognormnoise =matrix(lognormnoise,nrow=15,ncol=8)
+datal = list(x=log(vdens+lognormnoise),tmax=15,I=8)
+plot(datal$x,log(vole_densities)) #OK
+```
+
+```{r print_model_2, cache=T, echo = F}
+#modelH <- stan_model(file = "spatial.hassell.stan")
+#fit.hassell <- sampling(modelH, data = datal, 
+#                        iter = 1000, chains = 2, cores = 2)
+fit.hassell <- sampling(spatial.hassell, data = datal, 
+             iter = 1000, chains = 2, cores = 2)
+print(fit.hassell, probs = c(0.10, 0.5, 0.9))
+
+```
