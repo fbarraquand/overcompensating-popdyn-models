@@ -17,7 +17,6 @@ library(rstan)
 rstan_options(auto_write = FALSE)
 options(mc.cores = parallel::detectCores())
 library(MASS)
-library(bayesplot)
 library(knitr)
 
 ```
@@ -42,7 +41,7 @@ From [Barraquand, F., Pinot, A., Yoccoz, N. G., & Bretagnolle, V. (2014). Overco
 
 What does create population cycles? Delayed negative feedback
 
-$$ \frac{dN}{dt} = r N(t) \left(1-N(t-\tau)/K\right) $$
+$$ \frac{dN}{dt} = r N(t) \left(1-\frac{N(t-\tau)}{K}\right) $$
 
 as opposed to logistic with immediate negative feedback
 
@@ -63,6 +62,8 @@ which is the Beverton-Holt model. Tips:
 - use [separation of variables](https://en.wikipedia.org/wiki/Separation_of_variables)
 - and the formula $\frac{1}{X(1-X)} = \frac{1}{1-X} +\frac{1}{X}$
 
+Works for $S=2$ species too, no exact discrete-time equivalent to the continuous-time Lotka-Volterra as soon as $S=3$. 
+
 ## Discrete-time models that are **not** equivalent to the logistic model
 
 - Ricker $$N(t+1) = N(t) \exp \left(r\left(1-\frac{N(t)}{K}\right)\right)$$
@@ -81,12 +82,16 @@ for (t in 1:100){
 }
 plot(N[1:99],N[2:100],xlab = "N(t)",
      ylab = "N(t+1)",pch = 19)
+curve(x*exp(r*(1-x/K)),from = 0.001, to = max(N),add = TRUE)
 abline(v=10,col="red",lwd=2)
+abline(h=10,col="red",lwd=2)
 ```
 
-```{r simulating-ricker-ts}
+## Time series with overcompensation
+
+```{r simulating-ricker-ts, echo = FALSE}
 plot(1:100, N[1:100],xlab = "Time",
-     ylab = "N(t+1)", type = "both", pch = 19)
+     ylab = "N(t+1)", type = "b", pch = 19)
 abline(h=10,col="red",lwd=2)
 ```
 
@@ -102,20 +107,24 @@ for (t in 1:100){
 }
 plot(N[1:99],N[2:100],xlab = "N(t)",
      ylab = "N(t+1)",pch = 19)
+curve(x*exp(r) / (1+(exp(r)-1)*x/K),from = 0, to = 1.1*K,add=TRUE)
 abline(v=10,col="red",lwd=2)
+abline(h=10,col="red",lwd=2)
 ```
 
 
-```{r simulating-bevholt-ts}
+## Time series with undercompensation 
+
+```{r simulating-bevholt-ts, echo = FALSE}
 plot(1:100, N[1:100],xlab = "Time",
-     ylab = "N(t+1)", type = "both", pch = 19)
+     ylab = "N(t+1)", type = "b", pch = 19)
 abline(h=10,col="red",lwd=2)
 ```
 
 
 ## Discrete-time overcompensating models 
 
-= models with short time delays. Fitness computed between $t and t+1$ depends on $N(t)$. Thus models with a single time lag can already behave very differently from continuous time models without delays. 
+= models with short time delays. Fitness computed between $t$ and $t+1$ depends on $N(t)$. Thus models with a single time lag can already behave very differently from continuous time models without delays. 
 
 This is why we can observe chaos in such discrete-time models (May quote). 
 
