@@ -2,7 +2,9 @@
 
 In this presentation, I will build on a published paper on common vole population dynamics
 
-[Barraquand, F., Pinot, A., Yoccoz, N. G., & Bretagnolle, V. (2014). Overcompensation and phase effects in a cyclic common vole population: between first and second‐order cycles. Journal of Animal Ecology, 83(6), 1367-1378](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.12257). We fit discrete-time population dynamics models to counts of vole populations in western France. I will use this work as a vehicle to introduce:
+[Barraquand, F., Pinot, A., Yoccoz, N. G., & Bretagnolle, V. (2014). Overcompensation and phase effects in a cyclic common vole population: between first and second‐order cycles. Journal of Animal Ecology, 83(6), 1367-1378](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.12257). 
+
+We fit discrete-time population dynamics models to vole counts in western France. I will use this work as a vehicle to introduce:
 - how to switch from continuous to discrete time, and why the dynamical behaviour of discrete-time models can differ
 - the concept of overcompensation, and how it plays a role in explaining common vole cycles
 - how to fit such models in a simplified setup where we remove (i) spatial replication (ii) phase-dependence (iii) seasonality, that are all interesting yet complexifying features of the common vole story. We'll then discuss some of that extra complexity. 
