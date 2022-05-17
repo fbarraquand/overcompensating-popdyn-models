@@ -2,7 +2,7 @@
 title: "Overcompensating models for common voles"
 subtitle: "How to model discrete-time stochastic population dynamics for cyclic or outbreaking populations"
 author: "Frédéric Barraquand (CNRS, Bordeaux)"
-date: "2021-05-18"
+date: "2021-05-17"
 output: 
   beamer_presentation:
     theme: "Boadilla"
@@ -85,7 +85,7 @@ K = 10
 N = rep(1,100)
 N[1] = 1
 for (t in 1:100){
-  N[t+1] = N[t]*exp(r*(1-N[t]/K))
+  N[t+1] = N[t]*exp(r*(1-N[t]/K)) #Ricker growth
 }
 plot(N[1:99],N[2:100],xlab = "N(t)",
      ylab = "N(t+1)",pch = 19)
@@ -157,7 +157,7 @@ I recommend the MSS model, also used in [Soay Sheep](https://www.nature.com/arti
 
 ## These do work -- simulated time series from the model 
 
-![Simulated time series for variants of the Hassell model](fig/Fig3.pdf){ width=65% }
+![Simulated time series for variants of the Hassell model](fig/Fig3.pdf){ width=70% }
 
 
 ## Simulating and fitting the Hassell model in Stan
@@ -206,7 +206,7 @@ $$N(t+1) = \frac{N(t) e^{r+\epsilon_t}}{(1+ \alpha N(t))^\beta}, \; \epsilon_t \
 
 is equivalent to 
 
-$$\ln(N(t+1) = \ln(N(t)) + r + \epsilon_t - \beta \ln(1 + \alpha N(t)), \; \epsilon_t \sim \mathcal{N}(0,\sigma^2)$$
+$$\ln(N(t+1)) = \ln(N(t)) + r + \epsilon_t - \beta \ln(1 + \alpha N(t)), \; \epsilon_t \sim \mathcal{N}(0,\sigma^2)$$
 
 which is easy to specify as a probability distribution. 
 
@@ -290,7 +290,7 @@ mcmc_pairs(as.array(fit.hassell),
 
 The power-law model $N_{t+1} = N_t e^{r_0+\epsilon_t} N_t^{\alpha}$ is equivalent to $\ln(N_{t+1}) = \ln(N_t) + r_0 + \alpha \ln(N_t) + \epsilon_t$ which is also called an AutoRegressive model of order 1. [Dennis and Taper (1994) *Ecology*](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.2307/2937041). 
 
-![Overcompensation for $\alpha<1$, here $-1.18 [-1.39; -0.98]$](fig/Fig6.pdf){ width=75% }
+![Overcompensation for $\alpha<-1$, here $-1.18 [-1.39; -0.98]$](fig/Fig6.pdf){ width=75% }
 
 
 ## The deal with delayed density-dependence
@@ -327,11 +327,11 @@ The paper: [Barraquand, F., Pinot, A., Yoccoz, N. G., & Bretagnolle, V. (2014). 
 
 Stuff that we could and should perhaps have done: fully spatial Bayesian analysis with a model of the form
 
-$$N_{t+1,i} = N_{t,i} \frac{\exp(r + \eta_t + \zeta_{t,i})}{(1+\alpha N_{t,i} )^{\beta}}, \; \eta_{t} \sim \mathcal{N}(0,\sigma_T^2), \; \zeta_{t,i} \sim \mathcal{N}(0,\sigma_I^2)$$
+$$N_{t+1,i} = N_{t,i} \frac{\exp(r + \eta_t + \zeta_{t,i})}{(1+\alpha N_{t,i} )^{\beta}}, \; \eta_{t} \sim \mathcal{N}(0,\sigma_T^2), \; \zeta_{t,i} \sim \mathcal{N}(0,\sigma^2)$$
 
 (done!) and some refinements for phase-dependence like 
 
-$$N_{t+1,i} = N_{t,i} \frac{\exp(r + \eta_t + \zeta_{t,i})}{(1+\alpha[\text{phase}_t] N_{t,i} )^{\beta[\text{phase}_t]}}, \; \eta_{t} \sim \mathcal{N}(0,\sigma_T^2), \; \zeta_{t,i} \sim \mathcal{N}(0,\sigma_I^2)$$
+$$N_{t+1,i} = N_{t,i} \frac{\exp(r + \eta_t + \zeta_{t,i})}{(1+\alpha[\text{phase}_t] N_{t,i} )^{\beta[\text{phase}_t]}}, \; \eta_{t} \sim \mathcal{N}(0,\sigma_T^2), \; \zeta_{t,i} \sim \mathcal{N}(0,\sigma^2)$$
 
 Still doable to revisit! Data and code in the GitHub folder. 
 
