@@ -2,7 +2,7 @@
 title: "Overcompensating models for common voles"
 subtitle: "How to model discrete-time stochastic population dynamics for cyclic or outbreaking populations"
 author: "Frédéric Barraquand (CNRS, Bordeaux)"
-date: "2021-05-17"
+date: "2023-04-04"
 output: 
   beamer_presentation:
     theme: "Boadilla"
@@ -84,7 +84,7 @@ r = 4
 K = 10
 N = rep(1,100)
 N[1] = 1
-for (t in 1:100){
+for (t in 1:99){
   N[t+1] = N[t]*exp(r*(1-N[t]/K)) #Ricker growth
 }
 plot(N[1:99],N[2:100],xlab = "N(t)",
@@ -99,7 +99,7 @@ abline(h=10,col="red",lwd=2)
 
 ```{r simulating-ricker-ts, echo = FALSE}
 plot(1:100, N[1:100],xlab = "Time",
-     ylab = "N(t+1)", type = "b", pch = 19)
+     ylab = "N(t)", type = "b", pch = 19)
 abline(h=10,col="red",lwd=2)
 ```
 
@@ -110,7 +110,7 @@ r = 4
 K = 10
 N = rep(1,100)
 N[1] = 1
-for (t in 1:100){
+for (t in 1:99){
   N[t+1] = N[t]*exp(r) / (1+(exp(r)-1)*N[t]/K)
 }
 plot(N[1:99],N[2:100],xlab = "N(t)",
@@ -126,7 +126,7 @@ abline(h=10,col="red",lwd=2)
 
 ```{r simulating-bevholt-ts, echo = FALSE}
 plot(1:100, N[1:100],xlab = "Time",
-     ylab = "N(t+1)", type = "b", pch = 19)
+     ylab = "N(t)", type = "b", pch = 19)
 abline(h=10,col="red",lwd=2)
 ```
 
